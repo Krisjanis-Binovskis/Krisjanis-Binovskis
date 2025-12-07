@@ -17,7 +17,24 @@ def flatten_electrons(arr, max_electrons=2):
 
     return df
 
-def load_dataset_from_txt(txt_file, target_label, max_events = None, branches = None):
+def flatten_jets(arr, max_jets=4):
+    df = pd.DataFrame()
+    df["nJet"] = ak.num(arr["Jet_pt"])
+    
+    padded_pt  = ak.pad_none(arr["Jet_pt"], max_jets)
+    padded_eta = ak.pad_none(arr["Jet_eta"], max_jets)
+    padded_phi = ak.pad_none(arr["Jet_phi"], max_jets)
+    padded_btag = ak.pad_none(arr["Jet_btagDeepFlavB"], max_jets)
+    
+    for i in range(max_jets):
+        df[f"Jet{i+1}_pt"] = ak.to_numpy(ak.fill_none(padded_pt[:, i], 0))
+        df[f"Jet{i+1}_eta"] = ak.to_numpy(ak.fill_none(padded_eta[:, i], 0))
+        df[f"Jet{i+1}_phi"] = ak.to_numpy(ak.fill_none(padded_phi[:, i], 0))
+        df[f"Jet{i+1}_btag"] = ak.to_numpy(ak.fill_none(padded_btag[:, i], 0))
+    
+    return df
+
+def load_dataset_from_txt(txt_file, target_label, max_events = None, branches = None, max_electrons=2, max_jets=4):
     
     arrays = []
     loaded = 0
@@ -46,7 +63,10 @@ def load_dataset_from_txt(txt_file, target_label, max_events = None, branches = 
 
     data = ak.concatenate(arrays)
 
-    df = flatten_electrons(data, max_electrons=2)
+    df_electrons = flatten_electrons(data, max_electrons=max_electrons)
+    df_jets = flatten_jets(data, max_jets=max_jets)
+
+    df = pd.concat([df_electrons, df_jets], axis=1)
     df["target"] = target_label
 
     return df.reset_index(drop=True)

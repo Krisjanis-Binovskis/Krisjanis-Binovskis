@@ -24,14 +24,13 @@ branches += [
     "Jet_pt",
     "Jet_eta",
     "Jet_phi",
-    "Jet_btagDeepFlavB",
-    "Jet_nCharged"
+    "Jet_btagDeepFlavB"
 ]
 
 dfs = []
 
 signal_max = 200000
-background_max = 100000
+background_max = 50000
 
 for f in signal_files:
     dfs.append(load_dataset_from_txt(f, target_label=1, max_events = signal_max, branches=branches))
